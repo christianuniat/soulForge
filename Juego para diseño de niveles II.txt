@@ -1,0 +1,10 @@
+Juego para diseño de niveles II
+
+Genero: Shooter infinito
+Habilidades: Jalar enemigos, recolectar rescusos pare mejora de la base, el cris se la come
+Estetica: dark cute, calavera con duadaña para poder llevarse las almas, malsoleo con enemigos fantasmas
+
+Es un juego donde eres la parca donde tienes el objetivo obtener las almas que andas sueltas en todo el malsoleo, tener cuiado que pueden acerte daño ya que no desean ser capturados y harán lo posible para que no los atrapes, conforme vas avanzando podrás mejorarte y el lugar se hará mas complicado como los enemigos
+
+Objetivos principales: Un nivel prueba donde el personaje y una camara top down view donde moveras al personaje con las flechas y atacaras con el mause pueda moverse entre dos niveles, unos enmigos pueden ser golpeados por una guadaña voladora y puede golpear objetos y regresa a ti golpeando a los fantasmas
+
