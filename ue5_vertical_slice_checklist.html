@@ -1,0 +1,290 @@
+
+<style>
+  :root { --gap: 10px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+
+  .checklist-root { padding: 1.5rem 0.5rem; max-width: 760px; margin: 0 auto; }
+
+  .section { margin-bottom: 1.5rem; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; cursor: pointer; user-select: none;
+    background: var(--color-background-secondary);
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+  }
+  .section-header:hover { background: var(--color-background-tertiary); }
+
+  .section-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 500; color: var(--color-text-primary);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .section-meta { display: flex; align-items: center; gap: 8px; }
+  .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 20px;
+    font-weight: 500;
+  }
+  .chevron { font-size: 12px; color: var(--color-text-secondary); transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  .items { display: none; }
+  .items.open { display: block; }
+
+  .item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    cursor: pointer;
+  }
+  .item:last-child { border-bottom: none; }
+  .item:hover { background: var(--color-background-secondary); }
+
+  .item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; accent-color: #7F77DD; width: 15px; height: 15px; cursor: pointer; }
+
+  .item-text { font-size: 13px; color: var(--color-text-primary); line-height: 1.5; flex: 1; }
+  .item-text.done { text-decoration: line-through; color: var(--color-text-tertiary); }
+  .item-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+  .progress-bar-wrap { height: 4px; background: var(--color-background-secondary); }
+  .progress-bar { height: 100%; transition: width 0.3s; border-radius: 0; }
+
+  .global-progress {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 1.25rem; padding: 12px 16px;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-lg);
+    border: 0.5px solid var(--color-border-tertiary);
+  }
+  .global-bar-wrap { flex: 1; height: 6px; background: var(--color-background-tertiary); border-radius: 4px; overflow: hidden; }
+  .global-bar { height: 100%; background: #7F77DD; border-radius: 4px; transition: width 0.3s; }
+  .global-label { font-size: 13px; color: var(--color-text-secondary); min-width: 80px; text-align: right; }
+  .global-pct { font-size: 18px; font-weight: 500; color: var(--color-text-primary); min-width: 40px; }
+</style>
+
+<h2 class="sr-only">Vertical Slice Checklist for a top-down Unreal Engine 5 scythe combat game</h2>
+
+<div class="checklist-root">
+  <div class="global-progress">
+    <div>
+      <div class="global-pct" id="gpct">0%</div>
+    </div>
+    <div class="global-bar-wrap">
+      <div class="global-bar" id="gbar" style="width:0%"></div>
+    </div>
+    <div class="global-label" id="glabel">0 / 0 tasks</div>
+  </div>
+  <div id="sections"></div>
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    id: "project",
+    label: "Project setup",
+    color: "#888780",
+    items: [
+      { text: "Create UE5 project (Top Down template)", sub: "Enable Enhanced Input plugin" },
+      { text: "Configure top-down camera (spring arm + fixed pitch ~60°)", sub: "Lock camera rotation, set boom length" },
+      { text: "Set up Git / version control with .gitignore for UE5" },
+      { text: "Create base folder structure", sub: "Blueprints, Characters, Enemies, FX, Audio, UI, Maps" },
+    ]
+  },
+  {
+    id: "player",
+    label: "Player character",
+    color: "#7F77DD",
+    items: [
+      { text: "Create PlayerCharacter Blueprint (top-down movement)", sub: "8-directional WASD / stick movement with Enhanced Input" },
+      { text: "Add placeholder mesh + scythe socket on hand bone" },
+      { text: "Implement basic attack input (LMB / right trigger)" },
+      { text: "Scythe projectile — arc / ranged throw logic", sub: "BP_ScytheProjectile with collision and return-to-player option" },
+      { text: "Player health component (HP, death state)" },
+      { text: "Dodge / roll (optional stretch goal)" },
+    ]
+  },
+  {
+    id: "combat",
+    label: "Combat & scythe mechanics",
+    color: "#D85A30",
+    items: [
+      { text: "Scythe projectile deals damage on overlap with ghost" },
+      { text: "Hit reaction on enemy (flash material, knockback impulse)" },
+      { text: "Scythe return — projectile comes back to player" },
+      { text: "Attack cooldown / charge system (basic)" },
+      { text: "Area-of-effect on impact (small sweep radius)" },
+    ]
+  },
+  {
+    id: "enemy",
+    label: "Ghost enemy",
+    color: "#1D9E75",
+    items: [
+      { text: "Create GhostEnemy Blueprint with AI controller" },
+      { text: "Simple chase behavior (move toward player within range)", sub: "Use NavMesh + AIMoveTo" },
+      { text: "Ghost melee attack (touch damage or short-range)" },
+      { text: "Death state — play dissolve/despawn effect" },
+      { text: "Ghost spawner — BP_GhostSpawner with wave count" },
+      { text: "2-3 ghost variants (speed, HP, size) for variety" },
+    ]
+  },
+  {
+    id: "essence",
+    label: "Essence absorption (XP & currency)",
+    color: "#BA7517",
+    items: [
+      { text: "EssencePickup actor dropped on ghost death" },
+      { text: "Auto-collect radius around player (sphere overlap)" },
+      { text: "Experience component — XP, level threshold, level-up event" },
+      { text: "Gold/currency component — track and persist per run" },
+      { text: "Level-up feedback (screen flash, sound, stat boost)" },
+    ]
+  },
+  {
+    id: "ui",
+    label: "HUD & UI",
+    color: "#D4537E",
+    items: [
+      { text: "HUD widget — HP bar, XP bar, gold counter" },
+      { text: "Damage numbers (floating text on hit)" },
+      { text: "Level-up banner (temporary)" },
+      { text: "Game Over screen (restart button)" },
+      { text: "Basic pause menu" },
+    ]
+  },
+  {
+    id: "level",
+    label: "Level & environment",
+    color: "#378ADD",
+    items: [
+      { text: "Blocked-out arena with NavMesh bounds" },
+      { text: "Simple obstacles (block pathing, provide cover)" },
+      { text: "Spawn points placed around arena" },
+      { text: "Atmospheric lighting — dark, foggy, moody" },
+      { text: "Out-of-bounds kill volume" },
+    ]
+  },
+  {
+    id: "juice",
+    label: "Game feel & polish",
+    color: "#639922",
+    items: [
+      { text: "Screen shake on scythe hit" },
+      { text: "Particle FX on hit (ghost splatter / essence burst)" },
+      { text: "Essence absorption particle trail to player" },
+      { text: "Sound effects: throw, hit, death, collect, level up" },
+      { text: "Music loop (dark / atmospheric)" },
+      { text: "Time-dilation (slow-mo on kill, 0.1s)" },
+    ]
+  },
+  {
+    id: "qa",
+    label: "QA & slice delivery",
+    color: "#533AB7",
+    items: [
+      { text: "Playtest full loop: spawn → fight → absorb → level up → die" },
+      { text: "Tune numbers: ghost HP, XP thresholds, gold drop rate" },
+      { text: "Fix top 3 blocking bugs" },
+      { text: "Packaged build (Windows) or recorded gameplay video" },
+      { text: "Document what's in scope vs. out of scope for the slice" },
+    ]
+  },
+];
+
+const stored = JSON.parse(localStorage && (() => { try { return localStorage.getItem('vs_checks') } catch(e){ return null }})() || 'null') || {};
+
+function saveState(id, checked) {
+  try { const s = JSON.parse(localStorage.getItem('vs_checks') || '{}'); s[id] = checked; localStorage.setItem('vs_checks', JSON.stringify(s)); } catch(e){}
+}
+
+function updateGlobal() {
+  const all = document.querySelectorAll('.item input[type=checkbox]');
+  const done = [...all].filter(c => c.checked).length;
+  const pct = all.length ? Math.round(done / all.length * 100) : 0;
+  document.getElementById('gpct').textContent = pct + '%';
+  document.getElementById('gbar').style.width = pct + '%';
+  document.getElementById('glabel').textContent = done + ' / ' + all.length + ' tasks';
+}
+
+function updateSectionBadge(sectionEl) {
+  const checks = sectionEl.querySelectorAll('input[type=checkbox]');
+  const done = [...checks].filter(c => c.checked).length;
+  const total = checks.length;
+  const badge = sectionEl.querySelector('.badge');
+  const bar = sectionEl.querySelector('.progress-bar');
+  const pct = total ? Math.round(done / total * 100) : 0;
+  badge.textContent = done + '/' + total;
+  bar.style.width = pct + '%';
+  if (done === total && total > 0) {
+    badge.style.background = 'var(--color-background-success)';
+    badge.style.color = 'var(--color-text-success)';
+  } else {
+    badge.style.background = 'var(--color-background-secondary)';
+    badge.style.color = 'var(--color-text-secondary)';
+  }
+}
+
+const container = document.getElementById('sections');
+
+SECTIONS.forEach((sec, si) => {
+  const el = document.createElement('div');
+  el.className = 'section';
+
+  const itemsHtml = sec.items.map((item, ii) => {
+    const id = sec.id + '_' + ii;
+    const checked = stored[id] || false;
+    return `<label class="item" for="${id}">
+      <input type="checkbox" id="${id}" data-id="${id}" ${checked ? 'checked' : ''}>
+      <div>
+        <div class="item-text${checked ? ' done' : ''}">${item.text}</div>
+        ${item.sub ? `<div class="item-sub">${item.sub}</div>` : ''}
+      </div>
+    </label>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="section-header" data-sec="${si}">
+      <div class="section-title">
+        <div class="dot" style="background:${sec.color}"></div>
+        ${sec.label}
+      </div>
+      <div class="section-meta">
+        <span class="badge">0/${sec.items.length}</span>
+        <span class="chevron open">▾</span>
+      </div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" style="background:${sec.color};width:0%"></div></div>
+    <div class="items open">${itemsHtml}</div>
+  `;
+
+  container.appendChild(el);
+
+  const header = el.querySelector('.section-header');
+  const itemsDiv = el.querySelector('.items');
+  const chevron = el.querySelector('.chevron');
+
+  header.addEventListener('click', () => {
+    const open = itemsDiv.classList.toggle('open');
+    chevron.classList.toggle('open', open);
+  });
+
+  el.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', e => {
+      e.stopPropagation();
+      const label = cb.closest('.item');
+      const textEl = label.querySelector('.item-text');
+      textEl.classList.toggle('done', cb.checked);
+      saveState(cb.dataset.id, cb.checked);
+      updateSectionBadge(el);
+      updateGlobal();
+    });
+    cb.closest('label').addEventListener('click', e => { e.stopPropagation(); });
+  });
+
+  updateSectionBadge(el);
+});
+
+updateGlobal();
+</script>
